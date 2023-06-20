@@ -2,6 +2,8 @@ use alloc::vec::Vec;
 
 use bytes::Bytes;
 pub use ethereum_types::{Bloom, H160, H256, H64, U256};
+pub use ethereum::Log;
+pub use evm_core::ExitReason;
 #[cfg(feature = "impl-rlp")]
 use rlp::{Encodable, RlpStream};
 
@@ -284,7 +286,7 @@ pub struct Vote {
 #[cfg(feature = "impl-rlp")]
 impl Encodable for Vote {
     fn rlp_append(&self, s: &mut RlpStream) {
-        let vote_type: u8 = self.vote_type.clone().into();
+        let vote_type: u8 = self.vote_type;
         s.begin_list(4)
             .append(&self.height)
             .append(&self.round)
@@ -454,6 +456,47 @@ mod decode {
         deserializer: D,
     ) -> Result<Bytes, D::Error> {
         Ok(Hex::deserialize(deserializer)?.as_bytes())
+    }
+}
+
+#[cfg(feature = "proof")]
+#[derive(Clone, Debug, PartialEq, Eq)]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "proof")))]
+#[cfg_attr(feature = "impl-serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct Receipt {
+    pub tx_hash:      H256,
+    pub block_number: u64,
+    pub block_hash:   H256,
+    pub tx_index:     u32,
+    pub state_root:   H256,
+    pub used_gas:     U256,
+    pub logs_bloom:   Bloom,
+    pub logs:         Vec<Log>,
+    pub log_index:    u32,
+    pub code_address: Option<H256>,
+    pub sender:       H160,
+    pub ret:          ExitReason,
+    pub removed:      bool,
+}
+
+#[cfg(feature = "impl-rlp")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "impl-rlp")))]
+impl Encodable for Receipt {
+    fn rlp_append(&self, s: &mut RlpStream) {
+        s.begin_list(13)
+            .append(&self.tx_hash)
+            .append(&self.block_number)
+            .append(&self.block_hash)
+            .append(&self.tx_index)
+            .append(&self.state_root)
+            .append(&self.used_gas)
+            .append(&self.logs_bloom)
+            .append_list(&self.logs)
+            .append(&self.log_index)
+            .append(&self.code_address)
+            .append(&self.sender)
+            .append(&bincode::serialize(&self.ret).unwrap())
+            .append(&self.removed);
     }
 }
 
