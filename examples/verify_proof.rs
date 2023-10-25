@@ -24,7 +24,7 @@ fn main() {
         .collect::<Vec<_>>();
 
     let previous_state_root =
-        hex::decode("0000000000000000000000000000000000000000000000000000000000000000").unwrap();
+        hex::decode("b41fba79bb8830c3106d362a91ca1e189ab1c51e6e92a43d5fdcfaa7e79c5a10").unwrap();
 
     let result = axon_tools::verify_proof(
         block,
